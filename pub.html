@@ -66,7 +66,7 @@ a.pill{text-decoration:none;color:var(--brand);background:var(--brand-soft)}
       <p class="sub">版本 + 公告，客户端每分钟自己来拉一次</p>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
-      <a href="http://192.168.31.185:54971" target="_blank" style="color:var(--brand);text-decoration:none;font-size:12.5px;font-weight:600">官网 ↗</a>
+      <a href="/site" target="_blank" style="color:var(--brand);text-decoration:none;font-size:12.5px;font-weight:600">官网 ↗</a>
       <div class="sess" id="sess"></div>
     </div>
   </div>
@@ -197,18 +197,15 @@ async function refresh(){
   $('verList').innerHTML = vs.map(v => `<div class="item">
       <div class="itop"><span class="ver">${esc(v.ver)}</span>
         ${v.force?'<span class="tag r">强制更新</span>':''}
-        ${v.dl!==false && v.apk?'<span class="tag g">带 APK</span>':''}
-        ${v.dl!==false && v.exe?'<span class="tag g">带 exe</span>':''}
-        ${v.dl===false && (v.apk||v.exe)?'<span class="tag">旧版停供</span>':''}
+        ${v.apk?'<span class="tag g">带 APK</span>':''}
+        ${v.exe?'<span class="tag g">带 exe</span>':''}
         <span class="time">${hhmm(v.ts)}</span>
         <button class="btn small danger" onclick="del('ver','${v.id}')">删</button>
       </div>
       <p class="notes">${esc(v.notes || '（没写更新内容）')}</p>
       <div class="files">
-        ${v.dl===false
-          ? ((v.apk||v.exe) ? '<span class="pill">旧版本下载通道已关闭，只保留版本记录</span>' : '')
-          : `${v.apk?`<a class="pill" href="${esc(v.apk.url || ('/f/'+v.apk.id))}" download>APK ${esc(v.apk.name)} · ${fmt(v.apk.size)}</a>`:''}
-             ${v.exe?`<a class="pill" href="${esc(v.exe.url || ('/f/'+v.exe.id))}" download>exe ${esc(v.exe.name)} · ${fmt(v.exe.size)}</a>`:''}`}
+        ${v.apk?`<a class="pill" href="${esc(v.apk.url || ('/f/'+v.apk.id))}" download>APK ${esc(v.apk.name)} · ${fmt(v.apk.size)}</a>`:''}
+        ${v.exe?`<a class="pill" href="${esc(v.exe.url || ('/f/'+v.exe.id))}" download>exe ${esc(v.exe.name)} · ${fmt(v.exe.size)}</a>`:''}
       </div>
     </div>`).join('');
   loadLatest();
