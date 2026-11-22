@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Burger Chat 发布端</title>
+<style>
+:root{--bg:#f5f5f8;--ink:#1d2330;--sub:#7a8294;--line:#e6e8ee;--brand:#4f46e5;--brand-soft:#eeedff;--green:#12a150;--green-soft:#e6f7ee;--red:#e0453a;--red-soft:#fdecea}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:980px;margin:0 auto;padding:26px 22px 60px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#5b52f0,#3d35c9);display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px}
+h1{font-size:19px;margin:0}
+.sub{color:var(--sub);font-size:12px;margin:2px 0 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 4px}
+.card .hint{font-size:12px;color:var(--sub);margin:0 0 14px}
+.field{margin-bottom:12px}
+.lbl{font-size:12px;color:var(--sub);margin:0 0 5px 2px}
+input[type=text],input[type=password],textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;background:#fff;outline:none;color:inherit}
+input:focus,textarea:focus{border-color:#c8c4fb}
+textarea{min-height:96px;resize:vertical;line-height:1.6}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1;min-width:200px}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:none;background:var(--brand);color:#fff;font-weight:600;font-size:13.5px;cursor:pointer}
+.btn:disabled{background:#d7dae2;cursor:default}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.small{height:30px;padding:0 11px;font-size:12px;font-weight:500}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.file{display:flex;align-items:center;gap:10px;border:1px dashed #d7dae2;border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--sub);background:#fafbfd}
+.file b{color:var(--ink);font-weight:600}
+.file input{display:none}
+.item{border-top:1px solid var(--line);padding:12px 0}
+.item:first-child{border-top:none}
+.itop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ver{font-weight:700;font-size:14px}
+.tag{font-size:11px;padding:2px 7px;border-radius:6px;background:var(--brand-soft);color:var(--brand);font-weight:600}
+.tag.g{background:var(--green-soft);color:var(--green)}
+.tag.r{background:var(--red-soft);color:var(--red)}
+.time{font-size:11.5px;color:var(--sub);margin-left:auto}
+.notes{white-space:pre-wrap;font-size:13px;color:#3b4250;margin:6px 0 0;line-height:1.65}
+.files{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pill{font-size:11.5px;color:var(--sub);background:#f4f5f8;border-radius:8px;padding:3px 8px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:rgba(20,24,33,.92);color:#fff;padding:9px 16px;border-radius:10px;font-size:12.5px;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+.toast.bad{background:rgba(160,30,24,.94)}
+.hide{display:none!important}
+.sess{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--sub)}
+.pubaddr{font-family:ui-monospace,Consolas,monospace;background:#f4f5f8;border-radius:8px;padding:4px 8px;font-size:12px;color:#3b4250}
+a.btn{display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap}
+.btn.big{height:46px;font-size:14.5px;border-radius:12px}
+.btn.green{background:var(--green)}
+.sz{font-weight:400;opacity:.85;margin-left:8px;font-size:12px}
+.dl{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+a.pill{text-decoration:none;color:var(--brand);background:var(--brand-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">BC</div>
+    <div style="flex:1">
+      <h1>Burger Chat 发布端</h1>
+      <p class="sub">版本 + 公告，客户端每分钟自己来拉一次</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="http://192.168.31.185:54971" target="_blank" style="color:var(--brand);text-decoration:none;font-size:12.5px;font-weight:600">官网 ↗</a>
+      <div class="sess" id="sess"></div>
+    </div>
+  </div>
+
+  <div class="card" id="dlCard">
+    <h2>下载最新版</h2>
+    <p class="hint" id="dlHint">正在读取…</p>
+    <div class="dl" id="dlBtns"></div>
+  </div>
+
+  <div class="card" id="loginCard">
+    <h2>发布口令</h2>
+    <p class="hint">口令在程序目录的「发布端口令.txt」里，也在 data\config.json 里</p>
+    <div class="field"><input type="password" id="pin" placeholder="6 位数字" maxlength="10"></div>
+    <button class="btn" id="loginBtn">进去</button>
+  </div>
+
+  <div id="main" class="hide">
+    <div class="card">
+      <h2>发布新版本</h2>
+      <p class="hint">填版本号 + 更新内容；安装包可以不传，客户端只显示版本和公告</p>
+      <div class="row">
+        <div class="field"><p class="lbl">版本号</p><input type="text" id="ver" placeholder="例如 0.14"></div>
+        <div class="field"><p class="lbl">强制更新</p>
+          <div class="file"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="force" style="display:inline-block"> 低于这个版本的必须更新</label></div>
+        </div>
+      </div>
+      <div class="field"><p class="lbl">更新内容（一行一条，客户端原样显示）</p><textarea id="notes" placeholder="1. 修好了 xxx&#10;2. 新增 xxx"></textarea></div>
+      <div class="row">
+        <div class="file" id="apkBox"><b id="apkName">安卓安装包（APK）</b><span id="apkSize"></span><input type="file" id="apkFile" accept=".apk"></div>
+        <div class="file" id="exeBox"><b id="exeName">电脑端程序（exe）</b><span id="exeSize"></span><input type="file" id="exeFile" accept=".exe"></div>
+      </div>
+      <div style="margin-top:14px"><button class="btn" id="pubBtn">发布这个版本</button></div>
+    </div>
+
+    <div class="card">
+      <h2>发公告</h2>
+      <p class="hint">不发新版本也能单独发公告，客户端一分钟内会看到</p>
+      <div class="field"><p class="lbl">标题</p><input type="text" id="annTitle" placeholder="例如 服务器今晚维护"></div>
+      <div class="field"><p class="lbl">正文</p><textarea id="annBody" placeholder="写清楚要让用户做什么"></textarea></div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub)"><input type="checkbox" id="annPin"> 置顶</label>
+        <button class="btn" id="annBtn">发公告</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>已发布的版本</h2>
+      <p class="hint" id="verHint">还没有</p>
+      <div id="verList"></div>
+    </div>
+
+    <div class="card">
+      <h2>已发布的公告</h2>
+      <p class="hint" id="annHint">还没有</p>
+      <div id="annList"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LS = 'burgerpub.token';
+let TOKEN = '';
+let UP = { apk:null, exe:null };
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toast(msg, bad){
+  const t = $('toast'); t.textContent = msg; t.className = 'toast on' + (bad ? ' bad' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>{ t.className = 'toast'; }, 2600);
+}
+function hhmm(ts){
+  const d = new Date(ts||Date.now());
+  const p = n => String(n).padStart(2,'0');
+  return (d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes());
+}
+async function api(p, opt){
+  opt = opt || {};
+  const r = await fetch(p, {
+    method: opt.method || 'GET',
+    headers: Object.assign({ 'Content-Type':'application/json' }, TOKEN ? { Authorization:'Bearer ' + TOKEN } : {}),
+    body: opt.body ? JSON.stringify(opt.body) : undefined,
+    cache: 'no-store'
+  });
+  let d = {};
+  try { d = await r.json(); } catch(e){}
+  d.__status = r.status;
+  return d;
+}
+function fmt(n){ n=Number(n||0); if(n<1048576) return (n/1024).toFixed(1)+' KB'; if(n<1073741824) return (n/1048576).toFixed(1)+' MB'; return (n/1073741824).toFixed(2)+' GB'; }
+
+/* 首页公开下载入口：不用登录，谁打开这个地址都能直接下最新安装包 */
+async function loadLatest(){
+  let r = {};
+  try { r = await api('/api/latest'); } catch(e){}
+  const v = (r && r.latest) || null;
+  if(!v){
+    $('dlHint').textContent = '发布端还没有发布过版本';
+    $('dlBtns').innerHTML = '';
+    return;
+  }
+  $('dlHint').textContent = '版本 ' + v.ver + ' · ' + hhmm(v.ts) + (v.force ? ' · 强制更新' : '');
+  let h = '';
+  if(v.apk) h += `<a class="btn big green" href="${esc(v.apk.url)}" download>下载安卓版<span class="sz">${fmt(v.apk.size)} · ${esc(v.apk.name)}</span></a>`;
+  if(v.exe) h += `<a class="btn big ghost" href="${esc(v.exe.url)}" download>下载电脑版<span class="sz">${fmt(v.exe.size)} · ${esc(v.exe.name)}</span></a>`;
+  if(!h) h = '<span class="pill">这个版本没带安装包</span>';
+  $('dlBtns').innerHTML = h;
+}
+
+async function login(){
+  const pin = $('pin').value.trim();
+  if(!pin) return toast('先输入口令', true);
+  const r = await api('/api/auth', { method:'POST', body:{ pin } });
+  if(!r.ok) return toast(r.error || '口令不对', true);
+  TOKEN = r.token; localStorage.setItem(LS, TOKEN);
+  $('loginCard').classList.add('hide');
+  $('main').classList.remove('hide');
+  $('sess').innerHTML = '<span>端口 ' + r.port + ' · 已登录</span><button class="btn small ghost" onclick="logout()">退出</button>';
+  refresh();
+}
+function logout(){ TOKEN=''; localStorage.removeItem(LS); location.reload(); }
+
+async function refresh(){
+  const r = await api('/api/state');
+  if(!r.ok){ TOKEN=''; localStorage.removeItem(LS); return toast('登录过期了，重新输口令', true); }
+  const vs = r.versions || [], as = r.anns || [];
+  $('verHint').textContent = vs.length ? ('共 ' + vs.length + ' 个版本，客户端现在看到 ' + vs[0].ver) : '还没有';
+  $('verList').innerHTML = vs.map(v => `<div class="item">
+      <div class="itop"><span class="ver">${esc(v.ver)}</span>
+        ${v.force?'<span class="tag r">强制更新</span>':''}
+        ${v.dl!==false && v.apk?'<span class="tag g">带 APK</span>':''}
+        ${v.dl!==false && v.exe?'<span class="tag g">带 exe</span>':''}
+        ${v.dl===false && (v.apk||v.exe)?'<span class="tag">旧版停供</span>':''}
+        <span class="time">${hhmm(v.ts)}</span>
+        <button class="btn small danger" onclick="del('ver','${v.id}')">删</button>
+      </div>
+      <p class="notes">${esc(v.notes || '（没写更新内容）')}</p>
+      <div class="files">
+        ${v.dl===false
+          ? ((v.apk||v.exe) ? '<span class="pill">旧版本下载通道已关闭，只保留版本记录</span>' : '')
+          : `${v.apk?`<a class="pill" href="${esc(v.apk.url || ('/f/'+v.apk.id))}" download>APK ${esc(v.apk.name)} · ${fmt(v.apk.size)}</a>`:''}
+             ${v.exe?`<a class="pill" href="${esc(v.exe.url || ('/f/'+v.exe.id))}" download>exe ${esc(v.exe.name)} · ${fmt(v.exe.size)}</a>`:''}`}
+      </div>
+    </div>`).join('');
+  loadLatest();
+  $('annHint').textContent = as.length ? ('共 ' + as.length + ' 条') : '还没有';
+  $('annList').innerHTML = as.map(a => `<div class="item">
+      <div class="itop"><span class="ver">${esc(a.title)}</span>
+        ${a.pinned?'<span class="tag">置顶</span>':''}
+        <span class="time">${hhmm(a.ts)}</span>
+        <button class="btn small danger" onclick="del('ann','${a.id}')">删</button>
+      </div>
+      <p class="notes">${esc(a.body || '')}</p>
+    </div>`).join('');
+}
+
+async function del(type, id){
+  if(!confirm('确定删掉？客户端下次刷新就看不到了')) return;
+  const r = await api('/api/del', { method:'POST', body:{ type, id } });
+  if(r.ok) { toast('已删除'); refresh(); } else toast(r.error || '删失败', true);
+}
+
+async function uploadFile(file, kind){
+  const r = await fetch('/api/upload?kind=' + kind + '&name=' + encodeURIComponent(file.name), {
+    method:'POST',
+    headers: Object.assign({ 'Content-Type':'application/octet-stream' }, TOKEN ? { Authorization:'Bearer ' + TOKEN } : {}),
+    body: file
+  });
+  let d = {}; try { d = await r.json(); } catch(e){}
+  return d;
+}
+function bindFile(inputId, labelId, sizeId, kind){
+  $(inputId).addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    $(labelId).textContent = '正在上传 ' + f.name + ' …';
+    $(sizeId).textContent = '';
+    const r = await uploadFile(f, kind);
+    if(r.ok){
+      UP[kind] = r.file;
+      $(labelId).textContent = f.name;
+      $(sizeId).textContent = '已上传 · ' + fmt(r.file.size);
+      toast('安装包已传到发布端');
+    } else {
+      $(labelId).textContent = '上传失败，点这里重选';
+      toast(r.error || '上传失败', true);
+    }
+  });
+}
+bindFile('apkFile','apkName','apkSize','apk');
+bindFile('exeFile','exeName','exeSize','exe');
+$('apkBox').addEventListener('click', e => { if(e.target.tagName !== 'INPUT') $('apkFile').click(); });
+$('exeBox').addEventListener('click', e => { if(e.target.tagName !== 'INPUT') $('exeFile').click(); });
+
+$('loginBtn').addEventListener('click', login);
+$('pin').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
+
+$('pubBtn').addEventListener('click', async () => {
+  const ver = $('ver').value.trim();
+  if(!ver) return toast('先填版本号', true);
+  const b = { ver, notes: $('notes').value, force: $('force').checked, apk: UP.apk, exe: UP.exe };
+  $('pubBtn').disabled = true;
+  const r = await api('/api/version', { method:'POST', body:b });
+  $('pubBtn').disabled = false;
+  if(r.ok){
+    toast('已发布 ' + ver + '，客户端一分钟内会收到');
+    $('ver').value = ''; $('notes').value = ''; $('force').checked = false;
+    UP = { apk:null, exe:null };
+    $('apkName').textContent = '安卓安装包（APK）'; $('apkSize').textContent = '';
+    $('exeName').textContent = '电脑端程序（exe）'; $('exeSize').textContent = '';
+    $('apkFile').value = ''; $('exeFile').value = '';
+    refresh();
+  } else toast(r.error || '发布失败', true);
+});
+
+$('annBtn').addEventListener('click', async () => {
+  const title = $('annTitle').value.trim();
+  if(!title) return toast('先填公告标题', true);
+  const r = await api('/api/ann', { method:'POST', body:{ title, body:$('annBody').value, pinned:$('annPin').checked } });
+  if(r.ok){
+    toast('公告已发布');
+    $('annTitle').value = ''; $('annBody').value = ''; $('annPin').checked = false;
+    refresh();
+  } else toast(r.error || '发布失败', true);
+});
+
+loadLatest();
+
+/* 进来先看看有没有存过的登录状态 */
+(async function(){
+  const t = localStorage.getItem(LS);
+  if(t){
+    TOKEN = t;
+    const r = await api('/api/state');
+    if(r.ok){
+      $('loginCard').classList.add('hide');
+      $('main').classList.remove('hide');
+      $('sess').innerHTML = '<span>端口 ' + r.port + ' · 已登录</span><button class="btn small ghost" onclick="logout()">退出</button>';
+      refresh();
+      return;
+    }
+    TOKEN = '';
+    localStorage.removeItem(LS);
+  }
+  const hello = await api('/api/latest');
+  if(hello && hello.ok) $('loginCard').querySelector('.hint').textContent = '发布端在跑，口令在程序目录的「发布端口令.txt」里';
+})();
+</script>
+</body>
+</html>
